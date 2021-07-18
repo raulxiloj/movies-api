@@ -1,0 +1,15 @@
+CREATE TABLE users(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(60) NOT NULL,
+    username VARCHAR(30) NOT NULL,
+    password VARCHAR(80) NOT NULL
+);
+
+CREATE TABLE comment(
+    id SERIAL PRIMARY KEY,
+    id_movie INTEGER NOT NULL,
+    id_user INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    content VARCHAR(120) NOT NULL,
+    FOREIGN KEY (id_user) REFERENCES users(id)
+);
