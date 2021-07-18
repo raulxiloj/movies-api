@@ -1,12 +1,13 @@
 const express = require('express');
 
 const { getMovies, getDetailMovie, createComment, getMovieComments } = require('../controllers/movies');
+const checkJWT = require('../middlewares/check-jwt');
 
 const router = express.Router();
 
-router.get('/', getMovies);
-router.get('/:id', getDetailMovie);
-router.post('/:id/comment', createComment);
-router.get('/:id/comments', getMovieComments);
+router.get('/', checkJWT,  getMovies);
+router.get('/:id', checkJWT, getDetailMovie);
+router.post('/:id/comment', checkJWT, createComment);
+router.get('/:id/comments', checkJWT, getMovieComments);
 
 module.exports = router;
