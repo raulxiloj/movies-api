@@ -1,15 +1,16 @@
 package controllers
 
 import (
-	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
+	"time"
 
 	"net/http"
 
 	"example.com/tribal/src/api/models"
+	"example.com/tribal/src/config"
 	"example.com/tribal/src/database"
+	jwt "github.com/golang-jwt/jwt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -49,20 +50,17 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Check if a user with that username doesn't already exist
-	var name string
-	sqlQuery1 := `SELECT name FROM users WHERE username = $1;`
+	var username string
+	sqlQuery1 := `SELECT username FROM users WHERE username = $1;`
 	row := database.DBConnection.QueryRow(sqlQuery1, u.Username)
 
-	erro := row.Scan(&name)
-	switch erro {
-	case sql.ErrNoRows:
-		log.Println("No rows")
-	default:
-		log.Println("Error DB: ", erro)
+	err = row.Scan(&username)
+	if err != nil {
+		log.Println("Error fetching data: ", err)
 	}
 
-	if name != "" {
-		log.Println(name)
+	if username != "" {
+		log.Println("Ya existe un usuario con el siguiente username ", username)
 		http.Error(w, "Error usuario ya existente", http.StatusBadRequest)
 		return
 	}
@@ -84,10 +82,52 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("Error creating a user ", err)
 	}
 
-	fmt.Printf("User: %+v \n", u)
-
-	w.Write([]byte("Create user"))
+	json.NewEncoder(w).Encode(u)
 }
 
-//Login verifyPassword with bcrypt
-//bycrypt.comparehashandpassword ...
+func Login(w http.ResponseWriter, r *http.Request) {
+
+	var u models.User
+
+	err := json.NewDecoder(r.Body).Decode(&u)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var id int
+	var username string
+	var password string
+	sqlQuery1 := `SELECT id, username, password FROM users WHERE username = $1;`
+	row := database.DBConnection.QueryRow(sqlQuery1, u.Username)
+
+	err = row.Scan(&id, &username, &password)
+	if err != nil {
+		log.Println("Error fetching data: ", err)
+	}
+
+	//Match passwords
+	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(u.Password))
+
+	if err != nil {
+		log.Println("Las contrasena no coinciden ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//Create token
+	claims := jwt.MapClaims{}
+	claims["user_id"] = u.Id
+	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(config.JWT_SECRET)
+	if err != nil {
+		log.Println("Error al generar el token ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Write([]byte(tokenString))
+}

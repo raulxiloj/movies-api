@@ -20,6 +20,7 @@ func Run() {
 	if err != nil {
 		log.Fatal("Error while connecting:", err)
 	}
+	defer db.Close()
 
 	//Test connection
 	err = db.Ping()

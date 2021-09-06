@@ -8,13 +8,21 @@ import (
 
 var userRoutes = []Route{
 	{
-		Url:     "/users",
-		Method:  http.MethodGet,
-		Handler: controllers.GetUsers,
+		Url:          "/users",
+		Method:       http.MethodPost,
+		Handler:      controllers.CreateUser,
+		AuthRequired: false,
 	},
 	{
-		Url:     "/users",
-		Method:  http.MethodPost,
-		Handler: controllers.CreateUser,
+		Url:          "/users/login",
+		Method:       http.MethodPost,
+		Handler:      controllers.Login,
+		AuthRequired: false,
+	},
+	{
+		Url:          "/users",
+		Method:       http.MethodGet,
+		Handler:      controllers.GetUsers,
+		AuthRequired: true,
 	},
 }

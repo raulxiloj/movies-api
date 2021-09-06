@@ -11,6 +11,7 @@ import (
 
 var (
 	PORT        = 0
+	JWT_SECRET  []byte
 	DB_HOST     = ""
 	DB_PORT     = 0
 	DB_NAME     = ""
@@ -40,6 +41,7 @@ func Load() {
 	DB_NAME = os.Getenv("DB_NAME")
 	DB_USER = os.Getenv("DB_USER")
 	DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	JWT_SECRET = []byte(os.Getenv("JWT_SECRET"))
 
 	PsqlInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require",
 		DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
